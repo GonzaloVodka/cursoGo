@@ -28,6 +28,9 @@ func ResetCurrentID() {
 
 //NewTweet creates a tweet
 func NewTweet(usr User, txt string) (*Tweet, error) {
+	if usr.Name == "" {
+		return nil, fmt.Errorf("You must be logged in")
+	}
 	now := time.Now()
 	if len(txt) > 140 {
 		return nil, fmt.Errorf("Can't have more than 140 characters")
@@ -37,7 +40,7 @@ func NewTweet(usr User, txt string) (*Tweet, error) {
 }
 
 //StringTweet returns a tweet as a formatted string
-func StringTweet(tw Tweet) string {
+func (tw Tweet) StringTweet() string {
 	date := tw.Date.Format("Mon Jan _2 15:04:05 2006")
 	st := tw.User.Name + ": " + tw.Text + ", " + date
 	return st

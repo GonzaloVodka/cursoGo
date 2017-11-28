@@ -9,6 +9,8 @@ import (
 func main() {
 
 	shell := ishell.New()
+	var manager service.Manager
+	manager.InitializeService()
 	shell.SetPrompt("Tweeter >> ")
 	shell.Print("Type 'help' to know commands\n")
 
@@ -21,12 +23,12 @@ func main() {
 
 			c.Print("Pick a name: ")
 			user := domain.NewUser(c.ReadLine())
-			err := service.Register(user)
+			err := manager.Register(user)
 			if err != nil {
 				c.Printf("Invalid name, %s", err.Error())
 				return
 			}
-			if service.IsRegistered(user) {
+			if manager.IsRegistered(user) {
 				c.Print("Added successfully")
 			}
 		},
@@ -39,22 +41,18 @@ func main() {
 
 			defer c.ShowPrompt(true)
 
-			c.Print("Who are you? ")
-
-			user := domain.NewUser(c.ReadLine())
-
 			c.Print("Write your tweet: ")
 
 			text := c.ReadLine()
 
-			tweet, err := domain.NewTweet(user, text)
+			tweet, err := domain.NewTweet(manager.GetLoggedInUser(), text)
 
 			if err != nil {
 				c.Printf("Tweet not published, %s", err.Error())
 				return
 			}
 
-			err = service.PublishTweet(tweet)
+			err = manager.PublishTweet(tweet)
 
 			if err != nil {
 				c.Printf("Tweet not published, %s", err.Error())
@@ -72,16 +70,47 @@ func main() {
 
 			defer c.ShowPrompt(true)
 
-			tweets, err := service.GetTimeline()
+			tweets, err := manager.GetTimeline()
 			if err != nil {
 				c.Printf("Can't retrieve timeline, %s", err.Error())
 				return
 			}
 			for _, t := range tweets {
-				c.Println(domain.StringTweet(t))
+				c.Println(t.StringTweet())
 			}
 
 			return
+		},
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "login",
+		Help: "Log a user",
+		Func: func(c *ishell.Context) {
+
+			defer c.ShowPrompt(true)
+
+			c.Print("Enter your name: ")
+			user := domain.NewUser(c.ReadLine())
+
+			err := manager.Login(user)
+
+			if err != nil {
+				c.Print(err.Error())
+				return
+			}
+			c.Print("Logged")
+		},
+	})
+
+	shell.AddCmd(&ishell.Cmd{
+		Name: "logout",
+		Help: "Logout a user",
+		Func: func(c *ishell.Context) {
+
+			defer c.ShowPrompt(true)
+
+			manager.Logout()
 		},
 	})
 

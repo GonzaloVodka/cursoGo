@@ -6,35 +6,43 @@ import (
 	"github.com/cursoGo/src/domain"
 )
 
-var tweets []domain.Tweet
-var users []domain.User
-var loggedInUser domain.User
+//Manager of tweets
+type Manager struct {
+	tweets       []domain.Tweet
+	users        []domain.User
+	loggedInUser domain.User
+}
+
+//GetLoggedInUser getter
+func (manager *Manager) GetLoggedInUser() domain.User {
+	return manager.loggedInUser
+}
 
 //InitializeService initializes the service
-func InitializeService() {
-	tweets = make([]domain.Tweet, 0)
-	users = make([]domain.User, 0)
+func (manager *Manager) InitializeService() {
+	manager.tweets = make([]domain.Tweet, 0)
+	manager.users = make([]domain.User, 0)
 	domain.ResetCurrentID()
-	Logout()
+	manager.Logout()
 }
 
 //Register register a user
-func Register(userToRegister domain.User) error {
+func (manager *Manager) Register(userToRegister domain.User) error {
 	if userToRegister.Name == "" {
 		return fmt.Errorf("Name is required")
 	}
 
-	if IsRegistered(userToRegister) {
+	if manager.IsRegistered(userToRegister) {
 		return fmt.Errorf("The user is already registered")
 	}
 
-	users = append(users, userToRegister)
+	manager.users = append(manager.users, userToRegister)
 	return nil
 }
 
 //IsRegistered verify that a user is registered
-func IsRegistered(user domain.User) bool {
-	for _, u := range users {
+func (manager *Manager) IsRegistered(user domain.User) bool {
+	for _, u := range manager.users {
 		if u.Name == user.Name {
 			return true
 		}
@@ -43,45 +51,45 @@ func IsRegistered(user domain.User) bool {
 }
 
 //Login logs the user in
-func Login(user domain.User) error {
-	if isLoggedIn() {
+func (manager *Manager) Login(user domain.User) error {
+	if manager.IsLoggedIn() {
 		return fmt.Errorf("Already logged in")
 	}
-	if !IsRegistered(user) {
+	if !manager.IsRegistered(user) {
 		return fmt.Errorf("The user is not registered")
 	}
 
-	loggedInUser = user
+	manager.loggedInUser = user
 	return nil
 }
 
 //Logout logs the user out
-func Logout() error {
-	if !isLoggedIn() {
+func (manager *Manager) Logout() error {
+	if !manager.IsLoggedIn() {
 		return fmt.Errorf("Not logged in")
 	}
-	loggedInUser = domain.User{Name: ""}
+	manager.loggedInUser = domain.User{Name: ""}
 	return nil
 }
 
-//isLoggedIn checks if there is a logged in user
-func isLoggedIn() bool {
-	return loggedInUser.Name != ""
+//IsLoggedIn checks if there is a logged in user
+func (manager *Manager) IsLoggedIn() bool {
+	return manager.loggedInUser.Name != ""
 }
 
 //GetTweets returns all tweets.
-func GetTweets() []domain.Tweet {
-	return tweets
+func (manager *Manager) GetTweets() []domain.Tweet {
+	return manager.tweets
 }
 
 //GetTweet returns the last published Tweet
-func GetTweet() domain.Tweet {
-	return tweets[len(tweets)-1]
-}
+// func GetTweet() domain.Tweet {
+// 	return tweets[len(tweets)-1]
+// }
 
 //GetTweetByID returns the tweet that has that ID
-func GetTweetByID(id int) (*domain.Tweet, error) {
-	for _, tweet := range tweets {
+func (manager *Manager) GetTweetByID(id int) (*domain.Tweet, error) {
+	for _, tweet := range manager.tweets {
 		if tweet.ID == id {
 			return &tweet, nil
 		}
@@ -90,13 +98,13 @@ func GetTweetByID(id int) (*domain.Tweet, error) {
 }
 
 //GetTimelineFromUser returns all tweets from one user
-func GetTimelineFromUser(user domain.User) ([]domain.Tweet, error) {
-	if !IsRegistered(user) {
+func (manager *Manager) GetTimelineFromUser(user domain.User) ([]domain.Tweet, error) {
+	if !manager.IsRegistered(user) {
 		return nil, fmt.Errorf("That user is not registered")
 	}
 
 	var timeline []domain.Tweet
-	for _, t := range tweets {
+	for _, t := range manager.tweets {
 		if t.User.Name == user.Name {
 			timeline = append(timeline, t)
 		}
@@ -105,16 +113,16 @@ func GetTimelineFromUser(user domain.User) ([]domain.Tweet, error) {
 }
 
 //GetTimeline returns the loggedInUser's timeline
-func GetTimeline() ([]domain.Tweet, error) {
-	if !isLoggedIn() {
+func (manager *Manager) GetTimeline() ([]domain.Tweet, error) {
+	if !manager.IsLoggedIn() {
 		return nil, fmt.Errorf("No user logged in")
 	}
-	return GetTimelineFromUser(loggedInUser)
+	return manager.GetTimelineFromUser(manager.loggedInUser)
 }
 
 //PublishTweet Publishes a tweet
-func PublishTweet(tweetToPublish *domain.Tweet) error {
-	if loggedInUser.Name != tweetToPublish.User.Name {
+func (manager *Manager) PublishTweet(tweetToPublish *domain.Tweet) error {
+	if manager.loggedInUser.Name != tweetToPublish.User.Name {
 		return fmt.Errorf("You must be logged in to tweet")
 	}
 
@@ -122,6 +130,6 @@ func PublishTweet(tweetToPublish *domain.Tweet) error {
 		return fmt.Errorf("Text is required")
 	}
 
-	tweets = append(tweets, *tweetToPublish)
+	manager.tweets = append(manager.tweets, *tweetToPublish)
 	return nil
 }
