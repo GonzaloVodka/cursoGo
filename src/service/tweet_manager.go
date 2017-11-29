@@ -9,7 +9,7 @@ import (
 //Manager of tweets
 type Manager struct {
 	users        []domain.User
-	tweets       map[domain.User][]domain.Tweet // []domain.User
+	tweets       map[domain.User][]domain.Tweet
 	loggedInUser domain.User
 }
 
