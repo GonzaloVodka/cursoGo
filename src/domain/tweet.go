@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -42,6 +43,6 @@ func NewTweet(usr User, txt string) (*Tweet, error) {
 //StringTweet returns a tweet as a formatted string
 func (tw Tweet) StringTweet() string {
 	date := tw.Date.Format("Mon Jan _2 15:04:05 2006")
-	st := tw.User.Name + ": " + tw.Text + ", " + date
+	st := "TweetID: " + strconv.Itoa(tw.ID) + " Nick: " + tw.User.Nick + ": " + tw.Text + ", " + date
 	return st
 }
