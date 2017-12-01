@@ -105,18 +105,18 @@ func (manager *Manager) GetTimeline() ([]domain.Tweet, error) {
 }
 
 //PublishTweet Publishes a tweet
-func (manager *Manager) PublishTweet(tweetToPublish *domain.Tweet) error {
+func (manager *Manager) PublishTweet(tweetToPublish domain.Tweet) error {
 	if !manager.IsLoggedIn() {
 		return fmt.Errorf("No user logged in")
 	}
 
-	if tweetToPublish.Text == "" {
+	if tweetToPublish.GetText() == "" {
 		return fmt.Errorf("Text is required")
 	}
 
 	timeline, _ := manager.tweets[manager.GetLoggedInUser()]
 
-	timeline = append(timeline, *tweetToPublish)
+	timeline = append(timeline, tweetToPublish)
 
 	manager.tweets[manager.GetLoggedInUser()] = timeline
 
@@ -132,7 +132,7 @@ func (manager *Manager) DeleteTweet(id int) error {
 	timeline, _ := manager.tweets[manager.GetLoggedInUser()]
 	var newTimeline = make([]domain.Tweet, 0)
 	for _, tw := range timeline {
-		if tw.ID != id {
+		if tw.GetID() != id {
 			newTimeline = append(newTimeline, tw)
 		}
 	}
