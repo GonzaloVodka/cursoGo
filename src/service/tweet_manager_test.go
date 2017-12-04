@@ -48,20 +48,21 @@ func TestCantLoginIfAlreadyLoggedIn(t *testing.T) {
 	//Validation
 	validateExpectedError(t, err, "Already logged in")
 }
-func TestCantLogInWithUnregisteredUser(t *testing.T) {
-	//Initialization
-	var manager service.Manager
 
-	manager.InitializeService()
-	user := domain.NewUser("root", "", "", "")
+// func TestCantLogInWithUnregisteredUser(t *testing.T) {
+// 	//Initialization
+// 	var manager service.Manager
 
-	//Operation
-	err := manager.Login(user)
+// 	manager.InitializeService()
+// 	user := domain.NewUser("root", "", "", "")
 
-	//Validation
-	validateExpectedError(t, err, "The user is not registered")
+// 	//Operation
+// 	err := manager.Login(user)
 
-}
+// 	//Validation
+// 	validateExpectedError(t, err, "The user is not registered")
+
+// }
 
 // func TestPublishedTweetIsSaved(t *testing.T) {
 // 	//Initialization
@@ -207,10 +208,10 @@ func TestCanRetrieveTimeline(t *testing.T) {
 
 	var tweet, secondTweet, thirdTweet domain.Tweet
 
-	user := domain.NewUser("Manuel", "", "", "")
+	user := domain.NewUser("Manuel", "", "Manuel", "")
 	manager.Register(user)
 
-	secondUser := domain.NewUser("Gonzalo", "", "", "")
+	secondUser := domain.NewUser("Gonzalo", "", "Gonzalo", "")
 	manager.Register(secondUser)
 
 	text := "This is my first tweet"
@@ -243,6 +244,23 @@ func TestCanRetrieveTimeline(t *testing.T) {
 			t.Errorf("Expected user is %s but was %s", user.Name, tweet.GetUser().Name)
 		}
 	}
+}
+
+func TestCantLoginWithAnIncorrectPassword(t *testing.T) {
+	//Initialization
+	var manager service.Manager
+	manager.InitializeService()
+
+	user := domain.NewUser("Gonzalo", "pass", "Gonzalo", "")
+
+	user2 := domain.NewUser("Gonzalo", "incorrectPass", "Gonzalo", "")
+	//Operation
+	manager.Register(user)
+
+	err := manager.Login(user2)
+
+	//Validation
+	validateExpectedError(t, err, "The password is incorrect")
 }
 
 func TestCantRetrieveTimelineWithoutLoggingIn(t *testing.T) {
@@ -420,4 +438,161 @@ func TestCanGetAStringFromATweet(t *testing.T) {
 		t.Errorf("The expected text is %s but was %s", expectedText, text)
 	}
 
+}
+
+func TestCanDeleteATweet(t *testing.T) {
+	//Initialization
+	var manager service.Manager
+	manager.InitializeService()
+	user := domain.NewUser("Gonzalo", "", "Gonzalo", "")
+	manager.Register(user)
+	manager.Login(user)
+	tweet, _ := domain.NewTextTweet(user, "This is my first tweet")
+	manager.PublishTweet(tweet)
+	tweet2, _ := domain.NewTextTweet(user, "This is my second tweet")
+	manager.PublishTweet(tweet2)
+	tweet3, _ := domain.NewTextTweet(user, "This is my third tweet")
+	manager.PublishTweet(tweet3)
+
+	//Operation
+	s, _ := manager.DeleteTweet(2)
+
+	//Validation
+
+	if s != "A tweet was deleted" {
+		t.Errorf("Expected A tweet was deleted but was %s", s)
+	}
+
+}
+
+func TestCantDeleteATweetUnlogged(t *testing.T) {
+	//Initialization
+	var manager service.Manager
+	manager.InitializeService()
+	user := domain.NewUser("Gonzalo", "", "Gonzalo", "")
+	manager.Register(user)
+	tweet, _ := domain.NewTextTweet(user, "This is my tweet")
+	manager.PublishTweet(tweet)
+
+	//Operation
+	_, err := manager.DeleteTweet(0)
+
+	//Validation
+
+	validateExpectedError(t, err, "No user logged in")
+}
+
+func TestCantDeleteATweetWithWrongId(t *testing.T) {
+	//Initialization
+	var manager service.Manager
+	manager.InitializeService()
+	user := domain.NewUser("Gonzalo", "", "Gonzalo", "")
+	manager.Register(user)
+	manager.Login(user)
+	tweet, _ := domain.NewTextTweet(user, "This is my first tweet")
+	manager.PublishTweet(tweet)
+
+	//Operation
+	s, _ := manager.DeleteTweet(1)
+
+	//Validation
+
+	if s != "No tweet deleted" {
+		t.Errorf("Expected No tweet deleted but was %s", s)
+	}
+}
+
+func TestCantDeleteATweetOfAnotherUser(t *testing.T) {
+	//Initialization
+	var manager service.Manager
+	manager.InitializeService()
+
+	//First user publish a tweet
+	user := domain.NewUser("Gonzalo", "Gonzalo", "Gonzalo", "Gonzalo")
+	manager.Register(user)
+	manager.Login(user)
+	tweet, _ := domain.NewTextTweet(user, "This is my first tweet")
+	manager.PublishTweet(tweet)
+	manager.Logout()
+
+	//Second user publish a tweet
+	user2 := domain.NewUser("Another", "Another", "Another", "Another")
+	manager.Register(user2)
+	manager.Login(user2)
+	tweet2, _ := domain.NewTextTweet(user2, "This is my first tweet")
+	manager.PublishTweet(tweet2)
+	manager.Logout()
+
+	//Operation
+	manager.Login(user)
+	s, _ := manager.DeleteTweet(1)
+
+	//Validation
+
+	if s != "No tweet deleted" {
+		t.Errorf("Expected No tweet deleted but was %s", s)
+	}
+}
+
+func TestCantPublishADuplicateTextTweet(t *testing.T) {
+	//Initialization
+	var manager service.Manager
+	manager.InitializeService()
+
+	user := domain.NewUser("Gonzalo", "Gonzalo", "Gonzalo", "Gonzalo")
+	manager.Register(user)
+	manager.Login(user)
+	tweet, _ := domain.NewTextTweet(user, "This is my first tweet")
+	manager.PublishTweet(tweet)
+
+	//Operation
+
+	tweet2, _ := domain.NewTextTweet(user, "This is my first tweet")
+	err := manager.PublishTweet(tweet2)
+
+	//Validation
+
+	validateExpectedError(t, err, "Tweet duplicated")
+}
+func TestCantPublishADuplicateImageTweet(t *testing.T) {
+	//Initialization
+	var manager service.Manager
+	manager.InitializeService()
+
+	user := domain.NewUser("Gonzalo", "Gonzalo", "Gonzalo", "Gonzalo")
+	manager.Register(user)
+	manager.Login(user)
+	tweet, _ := domain.NewImageTweet(user, "This is my first tweet", "url")
+	manager.PublishTweet(tweet)
+
+	//Operation
+
+	tweet2, _ := domain.NewImageTweet(user, "This is my first tweet", "url")
+	err := manager.PublishTweet(tweet2)
+
+	//Validation
+
+	validateExpectedError(t, err, "Tweet duplicated")
+}
+func TestCantPublishADuplicateQuoteTweet(t *testing.T) {
+	//Initialization
+	var manager service.Manager
+	manager.InitializeService()
+
+	user := domain.NewUser("Gonzalo", "Gonzalo", "Gonzalo", "Gonzalo")
+	manager.Register(user)
+	manager.Login(user)
+	quotedtweet, _ := domain.NewTextTweet(user, "This is my first tweet")
+	tweet, _ := domain.NewQuoteTweet(user, "This is my first tweet", quotedtweet)
+	manager.PublishTweet(tweet)
+
+	//Operation
+
+	quotedtweet2, _ := domain.NewTextTweet(user, "This is my first tweet")
+	tweet2, _ := domain.NewQuoteTweet(user, "This is my first tweet", quotedtweet2)
+	err := manager.PublishTweet(tweet2)
+
+	//Validation
+
+	validateExpectedError(t, err, "Tweet duplicated")
 }

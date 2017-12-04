@@ -8,20 +8,25 @@ import (
 
 //Manager of tweets
 type Manager struct {
-	users        []domain.User
-	tweets       map[domain.User][]domain.Tweet
-	loggedInUser domain.User
+	users        []*domain.User
+	tweets       map[string][]domain.Tweet
+	loggedInUser *domain.User
 }
 
 //GetLoggedInUser getter
-func (manager *Manager) GetLoggedInUser() domain.User {
+func (manager *Manager) GetLoggedInUser() *domain.User {
 	return manager.loggedInUser
+}
+
+//SetLoggedInUser a
+func (manager *Manager) SetLoggedInUser(usr *domain.User) {
+	manager.loggedInUser = usr
 }
 
 //InitializeService initializes the service
 func (manager *Manager) InitializeService() {
-	manager.users = make([]domain.User, 0)
-	manager.tweets = make(map[domain.User][]domain.Tweet)
+	manager.users = make([]*domain.User, 0)
+	manager.tweets = make(map[string][]domain.Tweet)
 	domain.ResetCurrentID()
 	manager.Logout()
 }
@@ -36,8 +41,8 @@ func (manager *Manager) Register(userToRegister domain.User) error {
 		return fmt.Errorf("The user is already registered")
 	}
 
-	manager.users = append(manager.users, userToRegister)
-	manager.tweets[userToRegister] = make([]domain.Tweet, 0)
+	manager.users = append(manager.users, &userToRegister)
+	manager.tweets[userToRegister.Nick] = make([]domain.Tweet, 0)
 	return nil
 }
 
@@ -63,8 +68,7 @@ func (manager *Manager) Login(user domain.User) error {
 
 	for _, u := range manager.users {
 		if u.Nick == user.Nick && u.Pass == user.Pass {
-			user = u
-			manager.loggedInUser = user
+			manager.SetLoggedInUser(u)
 			return nil
 		}
 	}
@@ -77,13 +81,13 @@ func (manager *Manager) Logout() error {
 	if !manager.IsLoggedIn() {
 		return fmt.Errorf("Not logged in")
 	}
-	manager.loggedInUser = domain.User{Name: ""}
+	manager.loggedInUser = &domain.User{Name: ""}
 	return nil
 }
 
 //IsLoggedIn checks if there is a logged in user
 func (manager *Manager) IsLoggedIn() bool {
-	return manager.loggedInUser.Name != ""
+	return manager.GetLoggedInUser().Name != ""
 }
 
 //GetTimelineFromUser returns all tweets from one user
@@ -92,7 +96,7 @@ func (manager *Manager) GetTimelineFromUser(user domain.User) ([]domain.Tweet, e
 		return nil, fmt.Errorf("That user is not registered")
 	}
 
-	timeline, _ := manager.tweets[user]
+	timeline, _ := manager.tweets[user.Nick]
 	return timeline, nil
 }
 
@@ -101,40 +105,87 @@ func (manager *Manager) GetTimeline() ([]domain.Tweet, error) {
 	if !manager.IsLoggedIn() {
 		return nil, fmt.Errorf("No user logged in")
 	}
-	return manager.GetTimelineFromUser(manager.loggedInUser)
+	return manager.GetTimelineFromUser(*manager.loggedInUser)
 }
 
 //PublishTweet Publishes a tweet
 func (manager *Manager) PublishTweet(tweetToPublish domain.Tweet) error {
 	if !manager.IsLoggedIn() {
-		return fmt.Errorf("No user logged in")
+		return fmt.Errorf("You must be logged in to tweet")
 	}
 
 	if tweetToPublish.GetText() == "" {
 		return fmt.Errorf("Text is required")
 	}
 
-	timeline, _ := manager.tweets[manager.GetLoggedInUser()]
+	if manager.DuplicateTweet(tweetToPublish) {
+		return fmt.Errorf("Tweet duplicated")
+	}
+
+	timeline, _ := manager.tweets[manager.GetLoggedInUser().Nick]
 
 	timeline = append(timeline, tweetToPublish)
 
-	manager.tweets[manager.GetLoggedInUser()] = timeline
+	manager.tweets[manager.GetLoggedInUser().Nick] = timeline
 
 	return nil
 }
 
 //DeleteTweet delete a tweet
-func (manager *Manager) DeleteTweet(id int) error {
+func (manager *Manager) DeleteTweet(id int) (string, error) {
+	s := "No tweet deleted"
 	if !manager.IsLoggedIn() {
-		return fmt.Errorf("No user logged in")
+		return s, fmt.Errorf("No user logged in")
 	}
 
-	timeline, _ := manager.tweets[manager.GetLoggedInUser()]
+	timeline, _ := manager.tweets[manager.GetLoggedInUser().Nick]
+
 	var newTimeline = make([]domain.Tweet, 0)
+
 	for _, tw := range timeline {
 		if tw.GetID() != id {
 			newTimeline = append(newTimeline, tw)
+		} else {
+			s = "A tweet was deleted"
 		}
 	}
-	return nil
+	return s, nil
+}
+
+//DuplicateTweet validate if a tweet is duplicated
+func (manager *Manager) DuplicateTweet(tw domain.Tweet) (b bool) {
+	timeline, _ := manager.GetTimeline()
+	for _, tweet := range timeline {
+		if tw.Equals(tweet) {
+			b = true
+		}
+	}
+	return b
+}
+
+//Follow a user
+// func (manager *Manager) Follow(nick string) error {
+// 	fakeuser := domain.NewUser("", "", nick, "")
+// 	if !manager.IsRegistered(fakeuser) {
+// 		return fmt.Errorf("The user does not exist")
+// 	}
+
+// 	for _, user := range manager.users {
+// 		if user.Nick == nick {
+// 			manager.GetLoggedInUser().Following = append(manager.GetLoggedInUser().Following, user)
+// 			//user.Followers = append(user.Followers, manager.GetLoggedInUser())
+// 		}
+// 	}
+
+// 	return nil
+// }
+
+//GetFollowers from the logged user
+func (manager *Manager) GetFollowers() []domain.User {
+	return manager.GetLoggedInUser().Followers
+}
+
+//GetFollowings from the logged user
+func (manager *Manager) GetFollowings() []domain.User {
+	return manager.GetLoggedInUser().Following
 }

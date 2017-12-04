@@ -15,6 +15,7 @@ type Tweet interface {
 	SetUser(User)
 	SetText(string)
 	String() string
+	Equals(Tweet) bool
 }
 
 //TextTweet is a tweet
@@ -89,6 +90,14 @@ func NewTextTweet(usr User, txt string) (Tweet, error) {
 
 func (t TextTweet) String() string {
 	return t.PrintableTweet()
+}
+
+//Equals compares tweets
+func (t TextTweet) Equals(tw Tweet) (b bool) {
+	if t.GetUser().Nick == tw.GetUser().Nick && t.GetText() == tw.GetText() {
+		b = true
+	}
+	return b
 }
 
 //StringTweet returns a tweet as a formatted string
@@ -166,15 +175,27 @@ func (t ImageTweet) String() string {
 	return t.PrintableTweet()
 }
 
+//Equals compares tweets
+func (t ImageTweet) Equals(tw Tweet) (b bool) {
+	c, ok := tw.(ImageTweet)
+	if !ok {
+		return b
+	}
+	if t.GetUser().Nick == c.GetUser().Nick && t.GetText() == c.GetText() && t.url == c.url {
+		b = true
+	}
+	return b
+}
+
 //QuoteTweet is a tweet with a quoted tweet
 type QuoteTweet struct {
 	TextTweet
-	Tweet
+	quotedtweet Tweet
 }
 
 //PrintableTweet return a string to print the tweet
 func (t QuoteTweet) PrintableTweet() string {
-	s := t.TextTweet.PrintableTweet() + ` "` + t.Tweet.PrintableTweet() + `"`
+	s := t.TextTweet.PrintableTweet() + ` "` + t.quotedtweet.PrintableTweet() + `"`
 	return s
 }
 
@@ -210,7 +231,7 @@ func (t QuoteTweet) GetDate() *time.Time {
 
 //GetID return the id of the tweet
 func (t QuoteTweet) GetID() int {
-	return t.Tweet.GetID()
+	return t.quotedtweet.GetID()
 }
 
 //NewQuoteTweet creates a QuoteTweet
@@ -226,10 +247,22 @@ func NewQuoteTweet(usr User, text string, quotedtw Tweet) (Tweet, error) {
 	now := time.Now()
 
 	tw := TextTweet{user: usr, text: text, date: &now, iD: getNextID()}
-	qtw := QuoteTweet{TextTweet: tw, Tweet: quotedtw}
+	qtw := QuoteTweet{TextTweet: tw, quotedtweet: quotedtw}
 	return qtw, nil
 }
 
 func (t QuoteTweet) String() string {
 	return t.PrintableTweet()
+}
+
+//Equals compares tweets
+func (t QuoteTweet) Equals(tw Tweet) (b bool) {
+	c, ok := tw.(QuoteTweet)
+	if !ok {
+		return b
+	}
+	if t.GetUser().Nick == c.GetUser().Nick && t.GetText() == c.GetText() && t.quotedtweet.Equals(c.quotedtweet) {
+		b = true
+	}
+	return b
 }
