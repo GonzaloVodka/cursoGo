@@ -3,10 +3,10 @@ package rest
 import (
 	"net/http"
 
-	"gitlab.grupoesfera.com.ar/CAP-00082-GrupoEsfera-GO/src/domain"
+	"github.com/cursoGo/src/domain"
 
+	"github.com/cursoGo/src/service"
 	"github.com/gin-gonic/gin"
-	"gitlab.grupoesfera.com.ar/CAP-00082-GrupoEsfera-GO/src/service"
 )
 
 type GinTweet struct {

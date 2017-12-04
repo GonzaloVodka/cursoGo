@@ -3,7 +3,7 @@ package service
 import (
 	"os"
 
-	"gitlab.grupoesfera.com.ar/CAP-00082-GrupoEsfera-GO/src/domain"
+	"github.com/cursoGo/src/domain"
 )
 
 type TweetWriter interface {

@@ -3,8 +3,8 @@ package service_test
 import (
 	"testing"
 
-	"gitlab.grupoesfera.com.ar/CAP-00082-GrupoEsfera-GO/src/domain"
-	"gitlab.grupoesfera.com.ar/CAP-00082-GrupoEsfera-GO/src/service"
+	"github.com/cursoGo/src/domain"
+	"github.com/cursoGo/src/service"
 )
 
 func BenchmarkPublishTweetWithFileTweetWriter(b *testing.B) {

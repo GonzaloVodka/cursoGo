@@ -52,7 +52,7 @@ func main() {
 
 			text := c.ReadLine()
 
-			tweet, err := domain.NewTweet(manager.GetLoggedInUser(), text)
+			tweet, err := domain.NewTextTweet(*manager.GetLoggedInUser(), text)
 
 			if err != nil {
 				c.Printf("Tweet not published, %s\n", err.Error())
@@ -83,7 +83,7 @@ func main() {
 				return
 			}
 			for _, t := range tweets {
-				c.Println(t.StringTweet())
+				c.Println(t.String())
 			}
 
 			return
