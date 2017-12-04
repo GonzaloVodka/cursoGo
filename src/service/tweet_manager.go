@@ -81,13 +81,16 @@ func (manager *Manager) Logout() error {
 	if !manager.IsLoggedIn() {
 		return fmt.Errorf("Not logged in")
 	}
-	manager.loggedInUser = &domain.User{Name: ""}
+	manager.loggedInUser = nil
 	return nil
 }
 
 //IsLoggedIn checks if there is a logged in user
-func (manager *Manager) IsLoggedIn() bool {
-	return manager.GetLoggedInUser().Name != ""
+func (manager *Manager) IsLoggedIn() (b bool) {
+	if manager.GetLoggedInUser() != nil {
+		b = true
+	}
+	return b
 }
 
 //GetTimelineFromUser returns all tweets from one user
@@ -164,21 +167,21 @@ func (manager *Manager) DuplicateTweet(tw domain.Tweet) (b bool) {
 }
 
 //Follow a user
-// func (manager *Manager) Follow(nick string) error {
-// 	fakeuser := domain.NewUser("", "", nick, "")
-// 	if !manager.IsRegistered(fakeuser) {
-// 		return fmt.Errorf("The user does not exist")
-// 	}
+func (manager *Manager) Follow(nick string) error {
+	fakeuser := domain.NewUser("", "", nick, "")
+	if !manager.IsRegistered(fakeuser) {
+		return fmt.Errorf("The user does not exist")
+	}
 
-// 	for _, user := range manager.users {
-// 		if user.Nick == nick {
-// 			manager.GetLoggedInUser().Following = append(manager.GetLoggedInUser().Following, user)
-// 			//user.Followers = append(user.Followers, manager.GetLoggedInUser())
-// 		}
-// 	}
+	for _, user := range manager.users {
+		if user.Nick == nick {
+			manager.GetLoggedInUser().Following = append(manager.GetLoggedInUser().Following, *user)
+			user.Followers = append(user.Followers, *manager.GetLoggedInUser())
+		}
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
 //GetFollowers from the logged user
 func (manager *Manager) GetFollowers() []domain.User {

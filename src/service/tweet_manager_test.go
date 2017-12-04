@@ -38,7 +38,7 @@ func TestCantLoginIfAlreadyLoggedIn(t *testing.T) {
 	var manager service.Manager
 	manager.InitializeService()
 
-	user := domain.NewUser("root", "", "", "")
+	user := domain.NewUser("root", "root", "root", "root")
 	manager.Register(user)
 	manager.Login(user)
 
@@ -595,4 +595,34 @@ func TestCantPublishADuplicateQuoteTweet(t *testing.T) {
 	//Validation
 
 	validateExpectedError(t, err, "Tweet duplicated")
+}
+
+func TestCanFollowAUser(t *testing.T) {
+	//Initialization
+	var manager service.Manager
+	manager.InitializeService()
+
+	user := domain.NewUser("Gonzalo", "Gonzalo", "Gonzalo", "Gonzalo")
+	user2 := domain.NewUser("Another", "Another", "Another", "Another")
+	manager.Register(user)
+	manager.Register(user2)
+	manager.Login(user)
+
+	//Operation
+
+	manager.Follow("Another")
+
+	//Validation
+	var b bool
+
+	for _, u := range manager.GetLoggedInUser().Following {
+		if u.Nick == user2.Nick {
+			b = true
+		}
+	}
+
+	if !b {
+		t.Errorf("Not following")
+	}
+
 }
