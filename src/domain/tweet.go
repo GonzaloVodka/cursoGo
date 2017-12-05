@@ -1,268 +1,159 @@
 package domain
 
-import (
-	"fmt"
-	"time"
-)
+import "time"
+import "fmt"
 
-//Tweet interface
 type Tweet interface {
-	PrintableTweet() string
-	GetUser() User
+	GetUser() string
 	GetText() string
 	GetDate() *time.Time
-	GetID() int
-	SetUser(User)
-	SetText(string)
-	String() string
-	Equals(Tweet) bool
+	GetId() int
+	SetId(int)
+	PrintableTweet() string
 }
 
-//TextTweet is a tweet
 type TextTweet struct {
-	user User
-	text string
-	date *time.Time
-	iD   int
+	User string
+	Text string
+	Date *time.Time
+	Id   int
 }
 
-//PrintableTweet return a string to print the tweet
-func (t TextTweet) PrintableTweet() string {
-	s := "@" + t.user.Nick + ": " + t.text
-	return s
-}
+func NewTextTweet(user, text string) *TextTweet {
 
-//GetUser return the user of the tweet
-func (t TextTweet) GetUser() User {
-	return t.user
-}
+	date := time.Now()
 
-//SetUser is a setter
-func (t TextTweet) SetUser(u User) {
-	t.user = u
-}
-
-//GetText return the text of the tweet
-func (t TextTweet) GetText() string {
-	return t.text
-}
-
-//SetText is a setter
-func (t TextTweet) SetText(text string) {
-	t.text = text
-}
-
-//GetDate return the date of the tweet
-func (t TextTweet) GetDate() *time.Time {
-	return t.date
-}
-
-//GetID return the id of the tweet
-func (t TextTweet) GetID() int {
-	return t.iD
-}
-
-var currentID = -1
-
-//getNextID returns the id of the next tweet
-func getNextID() int {
-	currentID++
-	return (currentID)
-}
-
-//ResetCurrentID serves as an initialization, resetting the current ID
-func ResetCurrentID() {
-	currentID = -1
-}
-
-//NewTextTweet creates a TextTweet
-func NewTextTweet(usr User, txt string) (Tweet, error) {
-	if usr.Name == "" {
-		return nil, fmt.Errorf("You must be logged in")
+	tweet := TextTweet{
+		User: user,
+		Text: text,
+		Date: &date,
 	}
-	now := time.Now()
-	if len(txt) > 140 {
-		return nil, fmt.Errorf("Can't have more than 140 characters")
-	}
-	tw := TextTweet{user: usr, text: txt, date: &now, iD: getNextID()}
-	return tw, nil
+
+	return &tweet
 }
 
-func (t TextTweet) String() string {
-	return t.PrintableTweet()
+func (tweet *TextTweet) GetUser() string {
+	return tweet.User
 }
 
-//Equals compares tweets
-func (t TextTweet) Equals(tw Tweet) (b bool) {
-	if t.GetUser().Nick == tw.GetUser().Nick && t.GetText() == tw.GetText() {
-		b = true
-	}
-	return b
+func (tweet *TextTweet) GetText() string {
+	return tweet.Text
 }
 
-//StringTweet returns a tweet as a formatted string
-// func (tw Tweet) StringTweet() string {
-// 	date := tw.Date.Format("Mon Jan _2 15:04:05 2006")
-// 	st := "TweetID: " + strconv.Itoa(tw.ID) + " Nick: " + tw.User.Nick + ": " + tw.Text + ", " + date
-// 	return st
-// }
+func (tweet *TextTweet) GetDate() *time.Time {
+	return tweet.Date
+}
 
-//ImageTweet is a tweet with a image in it
+func (tweet *TextTweet) GetId() int {
+	return tweet.Id
+}
+
+func (tweet *TextTweet) SetId(id int) {
+	tweet.Id = id
+}
+
+func (tweet *TextTweet) PrintableTweet() string {
+	return fmt.Sprintf("@%s: %s", tweet.User, tweet.Text)
+}
+
+func (tweet *TextTweet) String() string {
+	return tweet.PrintableTweet()
+}
+
 type ImageTweet struct {
 	TextTweet
-	url string
+	URL string
 }
 
-//PrintableTweet return a string to print the tweet
-func (t ImageTweet) PrintableTweet() string {
-	s := "@" + t.user.Nick + ": " + t.text + " " + t.url
-	return s
-}
+func NewImageTweet(user, text, url string) *ImageTweet {
 
-//GetUser return the user of the tweet
-func (t ImageTweet) GetUser() User {
-	return t.user
-}
+	date := time.Now()
 
-//SetUser is a setter
-func (t ImageTweet) SetUser(u User) {
-	t.user = u
-}
-
-//GetText return the text of the tweet
-func (t ImageTweet) GetText() string {
-	return t.text
-}
-
-//SetText is a setter
-func (t ImageTweet) SetText(text string) {
-	t.text = text
-}
-
-//GetDate return the date of the tweet
-func (t ImageTweet) GetDate() *time.Time {
-	return t.date
-}
-
-//GetURL return the user of the tweet
-func (t ImageTweet) GetURL() string {
-	return t.url
-}
-
-//GetID return the id of the tweet
-func (t ImageTweet) GetID() int {
-	return t.iD
-}
-
-//NewImageTweet creates a TextTweet
-func NewImageTweet(usr User, txt string, url string) (Tweet, error) {
-	if usr.Name == "" {
-		return nil, fmt.Errorf("You must be logged in")
+	tweet := ImageTweet{
+		TextTweet: TextTweet{
+			User: user,
+			Text: text,
+			Date: &date,
+		},
+		URL: url,
 	}
 
-	if len(txt) > 140 {
-		return nil, fmt.Errorf("Can't have more than 140 characters")
-	}
-
-	now := time.Now()
-
-	tw := TextTweet{user: usr, text: txt, date: &now, iD: getNextID()}
-	itw := ImageTweet{TextTweet: tw, url: url}
-	return itw, nil
+	return &tweet
 }
 
-func (t ImageTweet) String() string {
-	return t.PrintableTweet()
+func (tweet *ImageTweet) GetUser() string {
+	return tweet.User
 }
 
-//Equals compares tweets
-func (t ImageTweet) Equals(tw Tweet) (b bool) {
-	c, ok := tw.(ImageTweet)
-	if !ok {
-		return b
-	}
-	if t.GetUser().Nick == c.GetUser().Nick && t.GetText() == c.GetText() && t.url == c.url {
-		b = true
-	}
-	return b
+func (tweet *ImageTweet) GetText() string {
+	return tweet.Text
 }
 
-//QuoteTweet is a tweet with a quoted tweet
+func (tweet *ImageTweet) GetDate() *time.Time {
+	return tweet.Date
+}
+
+func (tweet *ImageTweet) GetId() int {
+	return tweet.Id
+}
+
+func (tweet *ImageTweet) SetId(id int) {
+	tweet.Id = id
+}
+
+func (tweet *ImageTweet) PrintableTweet() string {
+	return fmt.Sprintf("@%s: %s %s", tweet.User, tweet.Text, tweet.URL)
+}
+
+func (tweet *ImageTweet) String() string {
+	return tweet.PrintableTweet()
+}
+
 type QuoteTweet struct {
 	TextTweet
-	quotedtweet Tweet
+	QuotedTweet Tweet
 }
 
-//PrintableTweet return a string to print the tweet
-func (t QuoteTweet) PrintableTweet() string {
-	s := t.TextTweet.PrintableTweet() + ` "` + t.quotedtweet.PrintableTweet() + `"`
-	return s
-}
+func NewQuoteTweet(user, text string, quotedTweet Tweet) *QuoteTweet {
 
-//GetUser return the user of the tweet
-func (t QuoteTweet) GetUser() User {
-	return t.TextTweet.GetUser()
-}
+	date := time.Now()
 
-//SetUser is a setter
-func (t QuoteTweet) SetUser(u User) {
-	t.TextTweet.user = u
-}
-
-//GetText return the text of the tweet
-func (t QuoteTweet) GetText() string {
-	return t.TextTweet.GetText()
-}
-
-//SetText is a setter
-func (t QuoteTweet) SetText(text string) {
-	t.TextTweet.text = text
-}
-
-//GetDate return the date of the tweet
-func (t QuoteTweet) GetDate() *time.Time {
-	return t.TextTweet.GetDate()
-}
-
-//GetURL return the user of the tweet
-// func (t QuoteTweet) GetURL() string {
-// 	return t.Tweet.GetURL()
-// }
-
-//GetID return the id of the tweet
-func (t QuoteTweet) GetID() int {
-	return t.quotedtweet.GetID()
-}
-
-//NewQuoteTweet creates a QuoteTweet
-func NewQuoteTweet(usr User, text string, quotedtw Tweet) (Tweet, error) {
-	if usr.Name == "" {
-		return nil, fmt.Errorf("You must be logged in")
+	tweet := QuoteTweet{
+		TextTweet: TextTweet{
+			User: user,
+			Text: text,
+			Date: &date,
+		},
+		QuotedTweet: quotedTweet,
 	}
 
-	if len(text) > 140 {
-		return nil, fmt.Errorf("Can't have more than 140 characters")
-	}
-
-	now := time.Now()
-
-	tw := TextTweet{user: usr, text: text, date: &now, iD: getNextID()}
-	qtw := QuoteTweet{TextTweet: tw, quotedtweet: quotedtw}
-	return qtw, nil
+	return &tweet
 }
 
-func (t QuoteTweet) String() string {
-	return t.PrintableTweet()
+func (tweet *QuoteTweet) GetUser() string {
+	return tweet.User
 }
 
-//Equals compares tweets
-func (t QuoteTweet) Equals(tw Tweet) (b bool) {
-	c, ok := tw.(QuoteTweet)
-	if !ok {
-		return b
-	}
-	if t.GetUser().Nick == c.GetUser().Nick && t.GetText() == c.GetText() && t.quotedtweet.Equals(c.quotedtweet) {
-		b = true
-	}
-	return b
+func (tweet *QuoteTweet) GetText() string {
+	return tweet.Text
+}
+
+func (tweet *QuoteTweet) GetDate() *time.Time {
+	return tweet.Date
+}
+
+func (tweet *QuoteTweet) GetId() int {
+	return tweet.Id
+}
+
+func (tweet *QuoteTweet) SetId(id int) {
+	tweet.Id = id
+}
+
+func (tweet *QuoteTweet) PrintableTweet() string {
+	return fmt.Sprintf(`@%s: %s "%s"`, tweet.User, tweet.Text, tweet.QuotedTweet)
+}
+
+func (tweet *QuoteTweet) String() string {
+	return tweet.PrintableTweet()
 }
